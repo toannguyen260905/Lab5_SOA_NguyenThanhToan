@@ -1,0 +1,311 @@
+{
+  "info": {
+    "name": "Lab 5 - Reporting",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "authUrl",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "productUrl",
+      "value": "http://localhost:3002"
+    },
+    {
+      "key": "orderUrl",
+      "value": "http://localhost:3003"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3004"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "orderReportId",
+      "value": ""
+    },
+    {
+      "key": "productReportId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{authUrl}}/",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"userName\": \"student\", \"password\": \"U3R1ZGVudEAxMjM=\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Success\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if(pm.response.code === 200) pm.collectionVariables.set(\"token\", pm.response.json().token);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create Product",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{productUrl}}/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Ban phim Lab 5\",\"price\":150000,\"quantity\":10}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Success\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if(pm.response.code === 201) pm.collectionVariables.set(\"productId\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create Order",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orderUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customer_name\":\"Sinh vien\",\"customer_email\":\"student@example.com\",\"items\":[{\"product_id\":{{productId}},\"quantity\":2}]}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Success\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if(pm.response.code === 201) pm.collectionVariables.set(\"orderId\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Complete Order",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{orderUrl}}/orders/{{orderId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"status\":\"completed\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create Order Report",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reports/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"order_id\":{{orderId}},\"unit_costs\":[{\"product_id\":{{productId}},\"unit_cost\":100000}]}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Success\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if(pm.response.code === 201) { const r = pm.response.json(); pm.collectionVariables.set(\"orderReportId\", r.id); pm.test(\"Totals\", () => { pm.expect(r.total_revenue).to.eql(300000); pm.expect(r.total_cost).to.eql(200000); pm.expect(r.total_profit).to.eql(100000); }); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "List Product Reports",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/reports/products"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Success\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "const row = pm.response.json().find(r => r.order_report_id === Number(pm.collectionVariables.get(\"orderReportId\")) && r.product_id === Number(pm.collectionVariables.get(\"productId\"))); if(row) pm.collectionVariables.set(\"productReportId\", row.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product Report Detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/reports/products/{{productReportId}}"
+      }
+    },
+    {
+      "name": "List Order Reports",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/reports/orders"
+      }
+    },
+    {
+      "name": "Order Report Detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/reports/orders/{{orderReportId}}"
+      }
+    },
+    {
+      "name": "Delete Product Report",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/reports/products/{{productReportId}}"
+      }
+    },
+    {
+      "name": "Restore Product Report",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/reports/products",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"order_report_id\":{{orderReportId}},\"product_id\":{{productId}}}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Success\", () => pm.expect(pm.response.code).to.be.oneOf([200,201]));",
+              "if(pm.response.code === 201) pm.collectionVariables.set(\"productReportId\", pm.response.json().id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete Order Report",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": "{{baseUrl}}/reports/orders/{{orderReportId}}"
+      }
+    }
+  ]
+}
